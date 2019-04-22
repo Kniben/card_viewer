@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+      background: white;
+
+      }
+      #glCanvas {
+      background: white;
+      margin: auto;
+      display: block;
+      border: 1px outset gray;
+      }
+    </style>
+  </head>
+  <body>
+
+
+    <canvas id="glCanvas", width=1600, height=3200 oncontextmenu="return false;"></canvas>
+    <img id="omniscience_png" src="https://img.scryfall.com/cards/png/en/m19/65.png?1531451394">
+
+    <script>
+      // The `--no-modules`-generated JS from `wasm-bindgen` attempts to use
+      // `WebAssembly.instantiateStreaming` to instantiate the wasm module,
+      // but this doesn't work with `file://` urls. This example is frequently
+      // viewed by simply opening `index.html` in a browser (with a `file://`
+      // url), so it would fail if we were to call this function!
+      //
+      // Work around this for now by deleting the function to ensure that the
+      // `no_modules.js` script doesn't have access to it. You won't need this
+      // hack when deploying over HTTP.
+      delete WebAssembly.instantiateStreaming;
+    </script>
+    <script src="./wasm_bindgen/card_viewer.js"></script>
+    <script src="./index.js"></script>
+
+    <!-- <script src="http://livejs.com/live.js"></script> -->
+  </body>
+</html>

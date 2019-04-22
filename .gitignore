@@ -1,0 +1,7 @@
+target/
+**/*.rs.bk
+Cargo.lock
+.crates.toml
+.idea/
+bin/
+wasm_bindgen/

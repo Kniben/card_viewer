@@ -1,0 +1,23 @@
+[tasks.install-wasm-bindgen]
+install_script = [
+'''
+command -v bin/wasm-bindgen >/dev/null 2>&1 || {
+    cargo install --root . --debug wasm-bindgen-cli
+}
+'''
+]
+
+[tasks.post-build]
+script = [
+'''
+mkdir -p wasm_bindgen
+bin/wasm-bindgen --out-dir wasm_bindgen/ --no-modules target/wasm32-unknown-unknown/debug/card_viewer.wasm
+'''
+]
+dependencies = ["install-wasm-bindgen"]
+
+[tasks.test]
+disabled = true
+
+[tasks.test-verbose]
+disabled = true
