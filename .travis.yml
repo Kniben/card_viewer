@@ -1,6 +1,6 @@
 language: rust
 cache: cargo
 install:
-  - cargo install --debug wasm-bindgen-cli
+  - cargo install -f --debug wasm-bindgen-cli
 script:
   - make
