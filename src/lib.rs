@@ -76,6 +76,9 @@ impl State {
 
     pub fn animate(&mut self) {
         let canvas = canvas();
+        canvas.set_width(window().inner_width().unwrap().as_f64().unwrap() as u32);
+        canvas.set_height(window().inner_height().unwrap().as_f64().unwrap() as u32);
+
         let ctx = canvas_context();
         ctx.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
 
