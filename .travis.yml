@@ -1,7 +1,7 @@
 language: rust
 cache: cargo
 install:
-  - cargo target add wasm32-unknown-unknown
-  - rustup install -f --debug wasm-bindgen-cli
+  - rustup target add wasm32-unknown-unknown
+  - cargo install -f --debug wasm-bindgen-cli
 script:
   - make
