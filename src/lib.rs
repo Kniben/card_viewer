@@ -144,17 +144,13 @@ fn layout(cards: &mut Vec<Card>) {
         .for_each(|card| tree.add([card.pos.x, card.pos.y], card.pos).unwrap());
 
     for card in cards.iter_mut() {
-        let neighbors: Vec<_> = tree
-            .nearest(&[card.pos.x, card.pos.y], 3, &squared_euclidean)
+        if let Some(neighbor_pos) = tree
+            .iter_nearest(&[card.pos.x, card.pos.y], &squared_euclidean)
             .unwrap()
-            .iter()
             .skip(1)
+            .take(3)
             .take_while(|(sq_dist, _)| sq_dist < &10000.0)
             .map(|(_, &neighbor_pos)| neighbor_pos)
-            .collect();
-
-        if let Some(neighbor_pos) = neighbors
-            .iter()
             .find(|&neighbor_pos| neighbor_pos.y - card.pos.y <= 0.0)
         {
             let offset = card.pos - neighbor_pos;
