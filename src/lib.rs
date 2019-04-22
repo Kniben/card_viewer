@@ -34,7 +34,7 @@ impl State {
         State {
             cards: iter::repeat(Card {
                 name: "Omniscience",
-                pos: na::Vector2::new(0.0, 0.0),
+                pos: na::Vector2::new(200.0, 400.0),
                 dim: na::Vector2::new(240.0, 340.0),
                 image: document()
                     .get_element_by_id("omniscience_png")
@@ -147,15 +147,14 @@ fn layout(cards: &mut Vec<Card>) {
             .iter()
             .skip(1)
             .take_while(|(sq_dist, _)| sq_dist < &10000.0)
-            .map(|(_, &neighbor)| neighbor)
+            .map(|(_, &neighbor_pos)| neighbor_pos)
             .collect();
 
-        let below_pos = neighbors
+        if let Some(neighbor_pos) = neighbors
             .iter()
-            .find(|&neighbor| neighbor.y - card.pos.y < 0.0);
-
-        below_pos.into_iter().for_each(|other_pos| {
-            let offset = card.pos - other_pos;
+            .find(|&neighbor_pos| neighbor_pos.y - card.pos.y <= 0.0)
+        {
+            let offset = card.pos - neighbor_pos;
             let offset_y_sign = if offset.y == 0.0 {
                 random()
             } else {
@@ -165,7 +164,7 @@ fn layout(cards: &mut Vec<Card>) {
             if !card.grabbing {
                 card.pos += (target_offset - offset) * 0.5;
             }
-        });
+        }
     }
 }
 
