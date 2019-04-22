@@ -13,7 +13,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{
     CanvasRenderingContext2d, Document, Event, HtmlCanvasElement, HtmlImageElement, MouseEvent,
-    UiEvent, Window,
+    Storage, UiEvent, Window, XmlHttpRequest,
 };
 
 mod card;
@@ -97,6 +97,38 @@ impl State {
             .unwrap();
         self.last_tick = now;
     }
+}
+
+pub fn load_card_bulk_data() -> String {
+    let item_key = &"card_viewer_scryfall_bulk_data";
+    get_item_in_local_storage(item_key).unwrap_or_else(|| {
+        log(&"Downloading bulk data.");
+        let data = download_card_bulk_data();
+        log(&"Saving bulk data to local storage.");
+        set_item_in_local_storage(item_key, &data);
+        data
+    })
+}
+
+pub fn download_card_bulk_data() -> String {
+    let request = XmlHttpRequest::new().expect("Failed creating XmlHttpRequest!");
+
+    request
+        .open_with_async(
+            &"GET",
+            &"https://archive.scryfall.com/json/scryfall-rulings.json",
+            false,
+        )
+        .expect("'open' failed when requesting card bulk data!");
+
+    request
+        .send()
+        .expect("'send' failed when requesting card bulk data!");
+
+    request
+        .response_text()
+        .expect("Failed getting response text!")
+        .expect("Got no response text!")
 }
 
 fn layout(cards: &mut Vec<Card>) {
@@ -193,6 +225,25 @@ fn document() -> Document {
     window().document().expect("No document found in window!")
 }
 
+fn set_item_in_local_storage(key: &str, value: &str) {
+    local_storage()
+        .set_item(key, value)
+        .expect("Couldn't set item in local storage!")
+}
+
+fn get_item_in_local_storage(key: &str) -> Option<String> {
+    local_storage()
+        .get_item(key)
+        .expect("Couldn't get item in local storage!")
+}
+
+fn local_storage() -> Storage {
+    window()
+        .local_storage()
+        .expect("Couldn't access the browser's local storage!")
+        .expect("There's no local browser storage!")
+}
+
 fn window() -> Window {
     web_sys::window().expect("No window found!")
 }
@@ -201,10 +252,7 @@ fn window() -> Window {
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn log(s: &str);
-}
 
-#[wasm_bindgen]
-extern "C" {
     #[wasm_bindgen(js_namespace = Math)]
     pub fn random() -> f64;
 }

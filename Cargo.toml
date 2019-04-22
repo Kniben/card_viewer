@@ -30,4 +30,6 @@ features = [
     'DomRect',
     'WebSocket',
     'MessageEvent',
+    'XmlHttpRequest',
+    'Storage',
 ]
