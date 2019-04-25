@@ -19,6 +19,10 @@ use web_sys::{
 mod card;
 mod util;
 
+const FUSE_DISTANCE: f64 = 100.0;
+const SQ_FUSE_DISTANCE: f64 = FUSE_DISTANCE * FUSE_DISTANCE;
+const APPROX_CARD_TITLE_HEIGHT: f64 = 36.0;
+
 #[wasm_bindgen]
 pub struct State {
     cards: Vec<Card>,
@@ -43,7 +47,7 @@ impl State {
                     .expect("Unable to cast image-element!"),
                 grabbing: false,
             })
-            .take(100)
+            .take(200)
             .collect(),
             mouse_pos: na::zero(),
             prev_mouse_pos: na::zero(),
@@ -68,7 +72,7 @@ impl State {
                         card.grabbing = false;
                     }
                 }
-                ("DOMMouseScroll", _) => log(&format!("{:?}", mouse_event.detail())),
+                ("DOMMouseScroll", _) => scroll_group(&mut self.cards, &self.mouse_pos, mouse_event.detail() as f64 * FUSE_DISTANCE),
                 _ => (),
             }
         }
@@ -135,8 +139,6 @@ pub fn download_card_bulk_data() -> String {
 }
 
 fn layout(cards: &mut Vec<Card>) {
-    let approx_card_title_height = 36.0;
-
     let mut tree = KdTree::new(2);
 
     cards
@@ -149,7 +151,7 @@ fn layout(cards: &mut Vec<Card>) {
             .unwrap()
             .skip(1)
             .take(3)
-            .take_while(|(sq_dist, _)| sq_dist < &10000.0)
+            .take_while(|(sq_dist, _)| sq_dist < &SQ_FUSE_DISTANCE)
             .map(|(_, &neighbor_pos)| neighbor_pos)
             .find(|&neighbor_pos| neighbor_pos.y - card.pos.y <= 0.0)
         {
@@ -159,7 +161,7 @@ fn layout(cards: &mut Vec<Card>) {
             } else {
                 offset.y.signum()
             };
-            let target_offset = na::Vector2::new(0.0, approx_card_title_height * offset_y_sign);
+            let target_offset = na::Vector2::new(0.0, APPROX_CARD_TITLE_HEIGHT * offset_y_sign);
             if !card.grabbing {
                 card.pos += (target_offset - offset) * 0.5;
             }
@@ -167,16 +169,28 @@ fn layout(cards: &mut Vec<Card>) {
     }
 }
 
+fn scroll_group(cards: &mut Vec<Card>, mouse_pos: &na::Vector2<f64>, dy: f64) {
+    cards.sort_by(y_ascending_cmp);
+    if let Some(x_root) = cards.iter()
+        .find(|card| card.is_inside(&mouse_pos))
+        .map(|card| card.pos.x)
+    {
+        cards.iter_mut()
+            .filter(|card| x_root - FUSE_DISTANCE < card.pos.x && card.pos.x < x_root + FUSE_DISTANCE)
+            .for_each(|card| card.pos.y += dy);
+    }
+}
+
 fn card_render_cmp(a: &Card, b: &Card) -> Ordering {
     match (a.grabbing, b.grabbing) {
         (true, false) => Ordering::Less,
         (false, true) => Ordering::Greater,
-        (_, _) => b
-            .pos
-            .y
-            .partial_cmp(&a.pos.y)
-            .expect("Couldn't compare card y-pos"),
+        (_, _) => y_ascending_cmp(a, b),
     }
+}
+
+fn y_ascending_cmp(a: &Card, b: &Card) -> Ordering {
+    b.pos.y.partial_cmp(&a.pos.y).expect("Couldn't compare card y-pos")
 }
 
 fn grab_card(cards: &mut Vec<Card>, point: &na::Vector2<f64>) {
